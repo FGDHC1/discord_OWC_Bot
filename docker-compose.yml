@@ -1,0 +1,9 @@
+services:
+  bot:
+    build: .
+    container_name: discord_WC_Bot
+    env_file:
+      - bot/.env
+    volumes:
+     - ./config.yml:/app/config.yml:ro
+    restart: unless-stopped
