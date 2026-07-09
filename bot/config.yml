@@ -1,6 +1,6 @@
 allowed_server_ids: 
   - 123456789012345678  # Replace with your Discord server ID
-triggerword: example_trigger
-response_message: "example_response"
+triggerword: bang
+response_message: "{user} said '{triggerword}' {count} times!"
 command_name: example_command
 
