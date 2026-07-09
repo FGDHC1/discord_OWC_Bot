@@ -1,10 +1,10 @@
-From python:3.14-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
-copy requirements.txt requirements.txt
+COPY bot/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-copy bot.py bot.py
+COPY bot/bot.py bot.py
 
-cmd ["python", "bot.py"]
+CMD ["python", "bot.py"]
