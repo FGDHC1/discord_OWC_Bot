@@ -5,5 +5,5 @@ services:
     env_file:
       - bot/.env
     volumes:
-     - ./config.yml:/app/config.yml:ro
+     - ./bot/config.yml:/app/config.yml:ro
     restart: unless-stopped
