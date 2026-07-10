@@ -53,8 +53,8 @@ async def backfill_counts():
                 async for message in channel.history(limit=None):
                     if message.author.bot:
                         continue
-                    if TRIGGER_WORD.lower() in message.content.lower():
-                        increment_count(guild_id, message.author.id)
+                    if any(word in message.content.lower() for word in TRIGGER_WORDS):
+                        increment_count(guild.id, message.author.id)
             except discord.Forbidden:
                 print(f"No permission on {channel.name}, skipping.", flush=True)
 
@@ -76,9 +76,16 @@ with open('config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
 ALLOWED_SERVER_IDS = set(config['allowed_server_ids'])
-TRIGGER_WORD = config['triggerword']
 RESPONSE_MESSAGE = config['response_message']
 COMMAND_NAME = config['command_name']
+if "triggerwords" in config:
+    TRIGGER_WORDS = [word.lower() for word in config['triggerwords']]
+elif "triggerword" in config:
+    TRIGGER_WORDS = [config['triggerword'].lower()]
+elif "triggerword" in config and "triggerwords" in config:
+    raise ValueError("Please specify either 'triggerword' or 'triggerwords', not both, in the config.yml file.")
+else:
+    raise ValueError("Please specify a 'triggerword' in the config.yml file.")
 
 #define intents
 intents = discord.Intents.default()
@@ -122,7 +129,7 @@ async def on_message(message):
         return
     if message.guild is None or message.guild.id not in ALLOWED_SERVER_IDS:
         return
-    if TRIGGER_WORD.lower() in message.content.lower():
+    if any(word in message.content.lower() for word in TRIGGER_WORDS):
         increment_count(message.guild.id, message.author.id)
         
 #define the slash command to trigger the bot's response
@@ -132,6 +139,6 @@ async def trigger_command(interaction: discord.Interaction):
         await interaction.response.send_message("Not allowed", ephemeral=True)
         return
     count = get_count(interaction.guild_id, interaction.user.id)
-    await interaction.response.send_message(RESPONSE_MESSAGE.format(count=count, user=interaction.user.mention, triggerword=TRIGGER_WORD))
+    await interaction.response.send_message(RESPONSE_MESSAGE.format(count=count, user=interaction.user.mention, triggerword=", ".join(TRIGGER_WORDS)), ephemeral=True)
 
 client.run(TOKEN)
