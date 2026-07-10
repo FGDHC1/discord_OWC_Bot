@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from discord import app_commands
 
 
-#sqlite3 initialisieren
+#sqlite3 initialisation
 db = sqlite3.connect('counts.db')
 db.execute("""
     CREATE TABLE IF NOT EXISTS counts (
@@ -56,7 +56,7 @@ async def backfill_counts():
                     if TRIGGER_WORD.lower() in message.content.lower():
                         increment_count(guild_id, message.author.id)
             except discord.Forbidden:
-                print(f"Kein Zugriff auf {channel.name}, überspringe.", flush=True)
+                print(f"No permission on {channel.name}, skipping.", flush=True)
 
 def backfill_already_done() -> bool:
     row = db.execute("SELECT value FROM meta WHERE key = 'backfill_done'").fetchone()
@@ -66,12 +66,12 @@ def mark_backfill_done():
     db.execute("INSERT OR REPLACE INTO meta (key, value) VALUES ('backfill_done', '1')")
     db.commit()
 
-#.env laden
+#load .env
 load_dotenv()
 
 TOKEN = os.environ['DISCORD_BOT_TOKEN']
 
-# config.yml laden
+#load config.yml 
 with open('config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
@@ -80,7 +80,7 @@ TRIGGER_WORD = config['triggerword']
 RESPONSE_MESSAGE = config['response_message']
 COMMAND_NAME = config['command_name']
 
-#intents defineiren
+#define intents
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -101,12 +101,12 @@ client = Triggerbot()
 #At startup, check if backfill has already been done. If not, perform backfill of message history to count trigger word occurrences.
 @client.event
 async def on_ready():
-    print(f"Eingeloggt als {client.user}", flush=True)
+    print(f"Logged in as {client.user}", flush=True)
     if not backfill_already_done():
-        print("Starte Backfill der Nachrichten-Historie...", flush=True)
+        print("Starting backfill of message history...", flush=True)
         await backfill_counts()
         mark_backfill_done()
-        print("Backfill abgeschlossen.", flush=True)
+        print("Backfill completed.", flush=True)
 
 #check if the bot is allowed to join the server. If not, leave immediately.
 @client.event
