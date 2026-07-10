@@ -101,7 +101,10 @@ class Triggerbot(discord.Client):
         for guild_id in ALLOWED_SERVER_IDS:
             guild = discord.Object(id=guild_id)
             self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
+            try:
+                await self.tree.sync(guild=guild)
+            except discord.Forbidden:
+                print(f"Failed to sync commands for guild {guild_id}. Bot may not have permission.")
 
 client = Triggerbot()
 
