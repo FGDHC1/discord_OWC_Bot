@@ -8,7 +8,7 @@ A simple Discord bot that watches for a configurable trigger word in messages, k
 - Tracks how often each user has said the word, per server (SQLite)
 - Backfill: on first startup, the bot scans the entire existing message history once to catch up on past mentions
 - Slash command to query your own count
-- Automatically leaves any server that isn't on the allowlist
+- Optional server allowlist
 
 ## Requirements
 
@@ -32,7 +32,20 @@ A simple Discord bot that watches for a configurable trigger word in messages, k
     └── requirements.txt
 ```
 
-## Installation
+## Setup: Discord Developer Portal
+1. Create an application in the [Developer Portal](https://discord.com/developers/applications)
+2. Under **Bot**:
+   - Enable **Message Content Intent** (under "Privileged Gateway Intents")
+   - Disable **Public Bot** so only you can invite the bot (optional)
+   - Generate and copy the Token
+3. Under **OAuth2** -> **OAuth2 URL Generator**:
+   - Scopes: `bot`, `applications.commands
+   - Bot permissions: `Send Messages`, `Read Message History``
+   - Open the generated URL to invite the bot to your server
+
+
+
+## Setup: Deploy
 
 1. Clone the repository.
 
@@ -64,10 +77,18 @@ All bot behavior is controlled via `bot/config.yml`:
 
 | Key | Type | Description |
 |---|---|---|
-| `allowed_server_ids` | list of integers | Discord server (guild) IDs the bot is allowed to operate on. If the bot is added to any other server, it leaves immediately. |
+| `allowed_server_ids` | list of integers (optional) | Discord server (guild) IDs the bot is allowed to operate on. See allowlist behavior below. |
 | `triggerword` | string | The word to track (matched case-insensitively, as a substring) |
 | `response_message` | string | Reply text for the slash command. Supports the placeholders `{user}`, `{count}`, and `{triggerword}` |
 | `command_name` | string | Name of the slash command users will type (e.g. `/command_name`) |
+ 
+**Allowlist behavior (`allowed_server_ids`):**
+ 
+| Config state | Behavior |
+|---|---|
+| Key not there | No restriction, the bot operates on any server it's invited to |
+| Key present but empty (`allowed_server_ids: []`) | The bot leaves every server immediately (effectively disabled) |
+| Key present with one or more IDs | The bot only operates on the listed servers and leaves any other |
 
 **Example:**
 ```yaml
