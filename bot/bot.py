@@ -75,7 +75,8 @@ TOKEN = os.environ['DISCORD_BOT_TOKEN']
 with open('config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
-ALLOWED_SERVER_IDS = set(config['allowed_server_ids'])
+RESTRICT_SERVERS = "allowed_server_ids" in config
+ALLOWED_SERVER_IDS = set(config.get('allowed_server_ids', []))
 RESPONSE_MESSAGE = config['response_message']
 COMMAND_NAME = config['command_name']
 if "triggerwords" in config:
@@ -98,13 +99,16 @@ class Triggerbot(discord.Client):
         self.tree = app_commands.CommandTree(self)
     
     async def setup_hook(self):
-        for guild_id in ALLOWED_SERVER_IDS:
-            guild = discord.Object(id=guild_id)
-            self.tree.copy_global_to(guild=guild)
-            try:
-                await self.tree.sync(guild=guild)
-            except discord.Forbidden:
-                print(f"Failed to sync commands for guild {guild_id}. Bot may not have permission.")
+        if RESTRICT_SERVERS:
+            for guild_id in ALLOWED_SERVER_IDS:
+                guild = discord.Object(id=guild_id)
+                self.tree.copy_global_to(guild=guild)
+                try:
+                    await self.tree.sync(guild=guild)
+                except discord.Forbidden:
+                    print(f"Failed to sync commands for guild {guild_id}. Bot may not have permission.")
+        else:
+            await self.tree.sync()
 
 client = Triggerbot()
 
@@ -121,7 +125,7 @@ async def on_ready():
 #check if the bot is allowed to join the server. If not, leave immediately.
 @client.event
 async def on_guild_join(guild):
-    if guild.id not in ALLOWED_SERVER_IDS:
+    if RESTRICT_SERVERS and guild.id not in ALLOWED_SERVER_IDS:
         await guild.leave()
 
 
@@ -130,7 +134,9 @@ async def on_guild_join(guild):
 async def on_message(message):
     if message.author.bot:
         return
-    if message.guild is None or message.guild.id not in ALLOWED_SERVER_IDS:
+    if message.guild is None:
+        return
+    if RESTRICT_SERVERS and message.guild.id not in ALLOWED_SERVER_IDS:
         return
     if any(word in message.content.lower() for word in TRIGGER_WORDS):
         increment_count(message.guild.id, message.author.id)
