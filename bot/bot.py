@@ -148,6 +148,6 @@ async def trigger_command(interaction: discord.Interaction):
         await interaction.response.send_message("Not allowed", ephemeral=True)
         return
     count = get_count(interaction.guild_id, interaction.user.id)
-    await interaction.response.send_message(RESPONSE_MESSAGE.format(count=count, user=interaction.user.mention, triggerword=", ".join(TRIGGER_WORDS)), ephemeral=True)
+    await interaction.response.send_message(RESPONSE_MESSAGE.format(count=count, user=interaction.user.mention, triggerword=", ".join(TRIGGER_WORDS)))
 
 client.run(TOKEN)

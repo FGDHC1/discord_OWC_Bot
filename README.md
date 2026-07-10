@@ -1,4 +1,4 @@
-# discord_WC_Bot
+# discord_OWC_Bot
 
 A simple Discord bot that watches for a configurable trigger word in messages, keeps a per-user count, and reports it via a slash command.
 
