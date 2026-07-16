@@ -26,13 +26,20 @@ db.execute("""
 db.commit()
 
 
-#increment the count for a specific user in a specific guild
-def increment_count(guild_id: int, user_id: int) -> None:
+#increment the count for a specific user in a specific guild by the given amount
+def increment_count(guild_id: int, user_id: int, amount: int = 1) -> None:
+    if amount <= 0:
+        return
     db.execute("""
-        INSERT INTO counts (guild_id, user_id, count) VALUES (?, ?, 1)
-        ON CONFLICT(guild_id, user_id) DO UPDATE SET count = count + 1
-    """, (guild_id, user_id))
+        INSERT INTO counts (guild_id, user_id, count) VALUES (?, ?, ?)
+        ON CONFLICT(guild_id, user_id) DO UPDATE SET count = count + excluded.count
+    """, (guild_id, user_id, amount))
     db.commit()
+
+#count how often any of the trigger words occur in a message (non-overlapping occurrences per word)
+def count_triggers(content: str) -> int:
+    lowered = content.lower()
+    return sum(lowered.count(word) for word in TRIGGER_WORDS)
 
 #get the count for a specific user in a specific guild
 def get_count(guild_id: int, user_id: int) -> int:
@@ -53,8 +60,9 @@ async def backfill_counts():
                 async for message in channel.history(limit=None):
                     if message.author.bot:
                         continue
-                    if any(word in message.content.lower() for word in TRIGGER_WORDS):
-                        increment_count(guild.id, message.author.id)
+                    hits = count_triggers(message.content)
+                    if hits:
+                        increment_count(guild.id, message.author.id, hits)
             except discord.Forbidden:
                 print(f"No permission on {channel.name}, skipping.", flush=True)
 
@@ -138,8 +146,9 @@ async def on_message(message):
         return
     if RESTRICT_SERVERS and message.guild.id not in ALLOWED_SERVER_IDS:
         return
-    if any(word in message.content.lower() for word in TRIGGER_WORDS):
-        increment_count(message.guild.id, message.author.id)
+    hits = count_triggers(message.content)
+    if hits:
+        increment_count(message.guild.id, message.author.id, hits)
         
 #define the slash command to trigger the bot's response
 @client.tree.command(name=COMMAND_NAME, description="Get the count of how many times you said the trigger word.")
