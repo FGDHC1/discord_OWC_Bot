@@ -111,4 +111,6 @@ Once running, type `/<command_name>` in any allowed server to see how many times
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Copyright (C) 2026 FGDHC1
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
